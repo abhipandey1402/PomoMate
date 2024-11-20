@@ -1,5 +1,63 @@
+import express, { Application } from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import dotenv from 'dotenv';
+import prisma from './db/prismaClient.js';
 
-const firstName : string = "Abhi"
-const lastName : string = "Pandey"
+// Load environment variables
+dotenv.config({
+    path: './.env',
+});
 
-console.log(firstName + " " + lastName);
+const app: Application = express();
+
+// Middleware
+app.use(
+    cors({
+        origin: [
+            'http://localhost:3000',
+            'http://localhost:3001',
+        ],
+        methods: ['POST', 'GET', 'PUT', 'PATCH', 'DELETE'],
+        credentials: true,
+    }),
+);
+
+app.use(
+    express.json({
+        limit: '32kb',
+    }),
+);
+
+app.use(
+    express.urlencoded({
+        extended: true,
+        limit: '32kb',
+    }),
+);
+
+app.use(express.static('public'));
+app.use(cookieParser());
+
+// Connect to database and start the server
+(async () => {
+    try {
+        await prisma.$connect();
+        const port = process.env.PORT || 8000;
+        app.listen(port, () => {
+            console.log(`Server is running at port: ${port}`);
+        });
+    } catch (err) {
+        console.error('PostgreSQL connection failed!', err);
+    }
+})();
+
+// Swagger documentation
+
+
+import userRouter from "./routes/user.routes.js"
+
+app.use("/api/v1/users", userRouter);
+
+
+export { app };
