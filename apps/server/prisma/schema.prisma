@@ -14,15 +14,119 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  username     String   @unique
-  email        String   @unique
-  fullName     String
-  password     String
+  id       String @id @default(uuid())
+  username String @unique
+  email    String @unique
+  fullName String
+  password String
+  role     String @default("user") // Role: user, admin, team admin
+
+  sessionsOwned  Session[]         @relation("SessionOwner")
+  sessionsJoined SessionFollower[]
+  tasksOwned     Task[]            @relation("TaskOwner")
+  sharedTasks    TaskShare[]       @relation("TaskParticipants")
+
+  teamsOwned  Team[] @relation("TeamOwner")
+  teamsJoined Team[] @relation("TeamMembers")
+
+  timers            Timer[] // Added relation to Timer
+  notifications     Notification[]
+  avatarUrl         String? // Optional profile picture
+  preferences       Json? // User-specific preferences
+  completedSessions Int            @default(0) // Total completed sessions
+
   refreshToken String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+
   @@index([username])
   @@index([fullName])
 }
+
+model Task {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  status      String
+  ownerId     String
+  owner       User        @relation("TaskOwner", fields: [ownerId], references: [id])
+  isPublic    Boolean     @default(false) // Private by default
+  teamId      String? // Optional: Team this task is shared with
+  team        Team?       @relation(fields: [teamId], references: [id])
+  sharedWith  TaskShare[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TaskShare {
+  id     String @id @default(cuid())
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id])
+  userId String
+  user   User   @relation("TaskParticipants", fields: [userId], references: [id])
+}
+
+model Session {
+  id        String  @id @default(cuid())
+  name      String
+  duration  Int
+  breakTime Int
+  isPublic  Boolean @default(false) // Private by default
+
+  ownerId   String
+  owner     User              @relation("SessionOwner", fields: [ownerId], references: [id])
+  teamId    String?
+  team      Team?             @relation(fields: [teamId], references: [id])
+  followers SessionFollower[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SessionFollower {
+  id        String  @id @default(cuid())
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id])
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+}
+
+model Team {
+  id          String  @id @default(uuid())
+  name        String // Team name
+  description String? // Optional description
+  isPublic    Boolean @default(false) // Private by default
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  ownerId  String
+  owner    User      @relation("TeamOwner", fields: [ownerId], references: [id])
+  members  User[]    @relation("TeamMembers") // Team members
+  sessions Session[] @relation
+  tasks    Task[]    @relation
+}
+
+model Timer {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id]) // Bidirectional relation
+  duration  Int // Total duration in seconds
+  breakTime Int // Break duration in seconds
+  completed Boolean // Whether the session was successfully completed
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
