@@ -56,8 +56,10 @@ app.use(cookieParser());
 
 
 import userRouter from "./routes/user.routes.js"
+import timerRouter from './routes/timer.routes.js';
 
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/timer", timerRouter);
 
 
 export { app };
