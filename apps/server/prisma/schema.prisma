@@ -110,13 +110,15 @@ model Team {
 }
 
 model Timer {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id]) // Bidirectional relation
-  duration  Int // Total duration in seconds
-  breakTime Int // Break duration in seconds
-  completed Boolean // Whether the session was successfully completed
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id]) // Bidirectional relation
+  duration      Int // Total duration in seconds
+  breakTime     Int // Break duration in seconds
+  remainingTime Int? // Remaining time in seconds, nullable
+  status        String   @default("active") // "active", "paused", or "completed"
+  completed     Boolean  @default(false) // Whether the session was successfully completed
+  createdAt     DateTime @default(now())
 }
 
 model Notification {
@@ -129,4 +131,3 @@ model Notification {
 
   @@index([userId])
 }
-
