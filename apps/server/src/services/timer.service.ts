@@ -21,9 +21,32 @@ export const startTimer = async (data: StartTimerInput) => {
     return timer;
 }
 
+export const getTimer = async (timerId: string, userId: string) => {
+    const timer = await prisma.timer.findUnique({
+        where: {id: timerId, userId: userId},
+        select: {
+            id: true,
+            user: true,
+            userId: true,
+            duration: true,
+            breakTime: true,
+            remainingTime: true,
+            status: true,
+            completed: true,
+            createdAt: true,
+        }
+    });
+
+    if(!timer) {
+        throw new ApiError(400, "Timer not found");
+    }
+
+    return timer;
+}
+
 export const pauseTimer = async (timerId: string, remainingTime: number, userId: string) => {
     const timer = await prisma.timer.findUnique({
-        where: {id: timerId},
+        where: {id: timerId, userId: userId},
         select: {id: true, status: true, remainingTime: true, createdAt: true, duration: true},
     });
 
@@ -32,7 +55,7 @@ export const pauseTimer = async (timerId: string, remainingTime: number, userId:
     }
 
     const updatedTimer = await prisma.timer.update({
-        where: {id: timerId},
+        where: {id: timerId, userId: userId},
         data: {
             status: "paused",
             remainingTime: remainingTime,
@@ -43,7 +66,7 @@ export const pauseTimer = async (timerId: string, remainingTime: number, userId:
 
 export const resumeTimer = async (timerId: string, userId: string) => {
     const timer = await prisma.timer.findUnique({
-        where: {id: timerId},
+        where: {id: timerId, userId: userId},
         select: {id: true, status: true}
     })
 
@@ -52,11 +75,49 @@ export const resumeTimer = async (timerId: string, userId: string) => {
     }
 
     const updatedTimer = await prisma.timer.update({
-        where: {id: timerId},
+        where: {id: timerId, userId: userId},
         data: {
             status: "active",
         }
     });
 
     return updatedTimer;
+}
+
+export const completeTimer = async (timerId: string, userId: string) => {
+    const timer = await prisma.timer.findUnique({
+        where: {id: timerId, userId: userId},
+        select: {id: true, status: true}
+    })
+
+    if(!timer || timer.status == "completed"){
+        throw new ApiError(400, "Timer not found or not in the state to be completed");
+    }
+
+    const completedTimer = await prisma.timer.update({
+        where: {id: timerId, userId: userId},
+        data: {
+            status: "completed",
+            completed: true,
+            remainingTime: 0,
+        }
+    });
+    return completedTimer;
+}
+
+export const clearTimer = async (timerId: string, userId: string) => {
+    const timer = await prisma.timer.findUnique({
+        where: {id: timerId, userId: userId},
+        select: {id: true, status: true}
+    });
+
+    if(!timer || timer.status == "completed"){
+        throw new ApiError(400, "Timer not found or it's completed");
+    }
+    
+    const clearedTimer = await prisma.timer.delete({
+        where: {id: timerId, userId: userId}
+    })
+
+    return "Timer deleted successfully"
 }
