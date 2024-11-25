@@ -12,6 +12,17 @@ export const startTimer = asyncHandler(async (req: any, res: any): Promise<void>
     );
 });
 
+export const getTimer = asyncHandler(async (req: any, res: any): Promise<void> => {
+    const { timerId } = req.params;
+    const userId = req.user.id;
+
+    const timerData = await timerService.getTimer(timerId, userId);
+
+    res.status(200).json(
+        new ApiResponse(200, timerData, "Timer Data fetched successfully")
+    );
+});
+
 export const pauseTimer = asyncHandler(async (req: any, res: any): Promise<void> => {
     const { timerId } = req.params;
     const { remainingTime } = req.body;
@@ -32,5 +43,27 @@ export const resumeTimer = asyncHandler(async (req: any, res: any): Promise<void
 
     res.status(200).json(
         new ApiResponse(200, resumedTimer, "Timer Resumed")
+    );
+});
+
+export const completeTimer = asyncHandler(async (req: any, res: any): Promise<void> => {
+    const { timerId } = req.params;
+    const userId = req.user.id;
+
+    const completedTimer = await timerService.completeTimer(timerId, userId);
+
+    res.status(200).json(
+        new ApiResponse(200, completedTimer, "Timer Completed")
+    );
+});
+
+export const clearTimer = asyncHandler(async (req: any, res: any): Promise<void> => {
+    const { timerId } = req.params;
+    const userId = req.user.id;
+
+    const clearedTimer = await timerService.clearTimer(timerId, userId);
+
+    res.status(200).json(
+        new ApiResponse(200, clearedTimer, "Timer cleared Successfully")
     );
 });

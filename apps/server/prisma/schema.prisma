@@ -13,6 +13,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TaskStatus {
+  notStarted
+  inProgress
+  completed
+  cancelled
+}
+
+enum TimerStatus {
+  active
+  paused
+  completed
+  cancelled
+}
+
 model User {
   id       String @id @default(uuid())
   username String @unique
@@ -47,7 +61,7 @@ model Task {
   id          String      @id @default(cuid())
   title       String
   description String?
-  status      String
+  status      TaskStatus     // notStarted, inProgress, completed, cancelled
   ownerId     String
   owner       User        @relation("TaskOwner", fields: [ownerId], references: [id])
   isPublic    Boolean     @default(false) // Private by default
@@ -116,7 +130,7 @@ model Timer {
   duration      Int // Total duration in seconds
   breakTime     Int // Break duration in seconds
   remainingTime Int? // Remaining time in seconds, nullable
-  status        String   @default("active") // "active", "paused", or "completed"
+  status        TimerStatus   @default(active) // "active", "paused", or "completed" "cancelled"
   completed     Boolean  @default(false) // Whether the session was successfully completed
   createdAt     DateTime @default(now())
 }
