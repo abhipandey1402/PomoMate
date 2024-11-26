@@ -13,7 +13,7 @@ import CTA from "../components/CTA";
 import { developerFeatures, features, pomodoroTechnique, testimonials } from "../utils/homepageData";
 import Footer from "../components/Footer";
 
-const Pomodoro = () => {
+const HomePage = () => {
 
     return (
         <Container className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black relative">
@@ -36,7 +36,7 @@ const Pomodoro = () => {
     );
 };
 
-export default Pomodoro;
+export default HomePage;
 
 const Container = styled.div`
 width: 100%;
