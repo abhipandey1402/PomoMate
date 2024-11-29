@@ -58,10 +58,12 @@ app.use(cookieParser());
 import userRouter from "./routes/user.routes.js"
 import timerRouter from './routes/timer.routes.js';
 import taskRouter from './routes/task.routes.js';
+import { globalErrorHandler } from './utils/GlobalErrorHandler.js';
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/timer", timerRouter);
 app.use("/api/v1/task", taskRouter);
 
+app.use(globalErrorHandler);
 
 export { app };

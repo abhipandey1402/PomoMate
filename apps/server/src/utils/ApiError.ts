@@ -1,3 +1,5 @@
+import logger from "../configs/logger.js";
+
 class ApiError extends Error {
     statusCode: number;
     data: any;
@@ -9,14 +11,13 @@ class ApiError extends Error {
         statusCode: number,
         message: string = "Something went wrong",
         errors: string[] = [],
-        data: any = null, // Optional data property for additional context
+        data: any = null,
         stack: string = ""
     ) {
         super(message);
 
-        // Assign values to the properties
         this.statusCode = statusCode;
-        this.data = data; // Additional contextual data, useful for Prisma-specific errors
+        this.data = data;
         this.message = message;
         this.success = false;
         this.errors = errors;
