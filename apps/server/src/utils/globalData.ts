@@ -1,0 +1,17 @@
+export const defaultConfig: any = {
+    pomodoroTime: 1500,
+    shortBreakTime: 300,
+    longBreakTime: 900,
+    autoStartBreaks: false,
+    autoStartPomodoros: false,
+    longBreakInterval: 4,
+    autoCheckTasks: false,
+    autoSwitchTasks: true,
+    alarmVolume: 50,
+    alarmRepeat: 1,
+    tickingVolume: 50,
+    colorTheme: "red",
+    hourFormat: "24-hour",
+    darkMode: false,
+    mobileAlarmEnabled: false,
+};
