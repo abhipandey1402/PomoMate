@@ -10,7 +10,7 @@ export const addTask = asyncHandler(async(req: any, res: any): Promise<void> => 
 
     res.status(201).json(
         new ApiResponse(201, task, "Task created successfully")
-    )
+    );
 });
 
 export const getTask = asyncHandler(async(req: any, res: any): Promise<void> => {
@@ -21,7 +21,7 @@ export const getTask = asyncHandler(async(req: any, res: any): Promise<void> => 
 
     res.status(200).json(
         new ApiResponse(200, task, "Task fetched successfully")
-    )
+    );
 });
 
 export const getTasks = asyncHandler(async(req: any, res: any): Promise<void> => {
@@ -31,7 +31,7 @@ export const getTasks = asyncHandler(async(req: any, res: any): Promise<void> =>
 
     res.status(200).json(
         new ApiResponse(200, tasks, "Tasks fetched successfully")
-    )
+    );
 });
 
 export const getTasksByStatus = asyncHandler(async(req: any, res: any): Promise<void> => {
@@ -42,7 +42,7 @@ export const getTasksByStatus = asyncHandler(async(req: any, res: any): Promise<
 
     res.status(200).json(
         new ApiResponse(200, tasks, "Tasks fetched successfully")
-    )
+    );
 });
 
 export const updateTaskStatus = asyncHandler(async(req: any, res: any): Promise<void> => {
@@ -53,7 +53,7 @@ export const updateTaskStatus = asyncHandler(async(req: any, res: any): Promise<
 
     res.status(200).json(
         new ApiResponse(200, updatedTask, "Task status updated successfully")
-    )
+    );
 });
 
 export const deleteTask = asyncHandler(async(req: any, res: any): Promise<void> => {
@@ -64,5 +64,5 @@ export const deleteTask = asyncHandler(async(req: any, res: any): Promise<void> 
 
     res.status(200).json(
         new ApiResponse(200, deletedTask, "Task deleted successfully")
-    )
+    );
 });

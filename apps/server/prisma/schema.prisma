@@ -45,6 +45,7 @@ model User {
 
   timers            Timer[] // Added relation to Timer
   notifications     Notification[]
+  UserConfig        UserConfig?
   avatarUrl         String? // Optional profile picture
   preferences       Json? // User-specific preferences
   completedSessions Int            @default(0) // Total completed sessions
@@ -61,7 +62,7 @@ model Task {
   id          String      @id @default(cuid())
   title       String
   description String?
-  status      TaskStatus     // notStarted, inProgress, completed, cancelled
+  status      TaskStatus // notStarted, inProgress, completed, cancelled
   ownerId     String
   owner       User        @relation("TaskOwner", fields: [ownerId], references: [id])
   isPublic    Boolean     @default(false) // Private by default
@@ -124,15 +125,15 @@ model Team {
 }
 
 model Timer {
-  id            String   @id @default(uuid())
+  id            String      @id @default(uuid())
   userId        String
-  user          User     @relation(fields: [userId], references: [id]) // Bidirectional relation
+  user          User        @relation(fields: [userId], references: [id]) // Bidirectional relation
   duration      Int // Total duration in seconds
   breakTime     Int // Break duration in seconds
   remainingTime Int? // Remaining time in seconds, nullable
-  status        TimerStatus   @default(active) // "active", "paused", or "completed" "cancelled"
-  completed     Boolean  @default(false) // Whether the session was successfully completed
-  createdAt     DateTime @default(now())
+  status        TimerStatus @default(active) // "active", "paused", or "completed" "cancelled"
+  completed     Boolean     @default(false) // Whether the session was successfully completed
+  createdAt     DateTime    @default(now())
 }
 
 model Notification {
@@ -144,4 +145,38 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+model UserConfig {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  pomodoroTime       Int     @default(1500) // Default: 1500 seconds
+  shortBreakTime     Int     @default(300) // Default: 300 seconds
+  longBreakTime      Int     @default(900) // Default: 900 seconds
+  autoStartBreaks    Boolean @default(false)
+  autoStartPomodoros Boolean @default(false)
+  longBreakInterval  Int     @default(4) // Long break after 4 pomodoros
+
+  autoCheckTasks  Boolean @default(false)
+  autoSwitchTasks Boolean @default(true)
+
+  alarmSound    String? // E.g., "Kitchen", "Bell"
+  alarmVolume   Int     @default(50) // Volume in percentage
+  alarmRepeat   Int     @default(1) // Number of times the alarm repeats
+  tickingSound  String? // E.g., "Clock"
+  tickingVolume Int     @default(50) // Volume in percentage
+
+  colorTheme String  @default("red") // Theme color
+  hourFormat String  @default("24-hour") // 12-hour or 24-hour format
+  darkMode   Boolean @default(false)
+
+  reminderTime       Int? // Reminder before session ends, in minutes
+  mobileAlarmEnabled Boolean @default(false)
+
+  integrations Json? // Integration settings like Todoist or Webhook
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

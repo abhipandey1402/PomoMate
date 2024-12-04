@@ -4,7 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 
 
 export const addTask = async(title: string, description: string, status: TaskStatus, userId: string) => {
-    const task = prisma.task.create({
+    const task = await prisma.task.create({
         data: {
             title,
             description,
@@ -13,10 +13,10 @@ export const addTask = async(title: string, description: string, status: TaskSta
         }
     });
     return task;
-}
+};
 
 export const getTask = async(taskId: string, userId: string) => {
-    const task = prisma.task.findUnique({
+    const task = await prisma.task.findUnique({
         where: {id: taskId, ownerId: userId},
         select: {
             id: true,
@@ -35,10 +35,10 @@ export const getTask = async(taskId: string, userId: string) => {
     };
 
     return task;
-}
+};
 
 export const getTasks = async(userId: string) => {
-    const tasks = prisma.task.findMany({
+    const tasks = await prisma.task.findMany({
         where: {ownerId: userId},
         select: {
             id: true,
@@ -57,10 +57,10 @@ export const getTasks = async(userId: string) => {
     };
     
     return tasks;
-}
+};
 
 export const getTasksByStatus = async(status: TaskStatus, userId: string) => {
-    const tasks = prisma.task.findMany({
+    const tasks = await prisma.task.findMany({
         where: {ownerId: userId, status: status},
         select: {
             id: true,
@@ -79,7 +79,7 @@ export const getTasksByStatus = async(status: TaskStatus, userId: string) => {
     };
     
     return tasks;
-}
+};
 
 
 export const updateTaskStatus = async (taskId: string, status: TaskStatus, userId: string) => {
@@ -102,7 +102,7 @@ export const updateTaskStatus = async (taskId: string, status: TaskStatus, userI
         }
     });
     return updatedStatus;
-}
+};
 
 export const deleteTask = async (taskId: string, userId: string) => {
     const task = await prisma.task.findUnique({
@@ -121,5 +121,5 @@ export const deleteTask = async (taskId: string, userId: string) => {
         where: {id: taskId, ownerId: userId}
     });
     return deletedTask;
-}
+};
 
