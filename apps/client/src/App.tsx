@@ -2,15 +2,24 @@ import styled from "styled-components";
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import "./App.css";
 import HomePage from "./features/homepage/pages/HomePage";
-import PomodoroTimer from "./features/pomodoro/pages/PomodoroPage";
+import PomodoroPage from "./features/pomodoro/pages/PomodoroPage";
+import AuthPage from "./features/user/pages/AuthPage";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import ProtectedRoutes from "./features/globalFeatures/components/ProtectedRoutes";
 
 function App() {
   return (
     <BrowserRouter>
-      <Container>
+      <Container className="bg-gradient-to-br from-black via-gray-900 to-black">
+        <ToastContainer />
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/pomodoro" element={<PomodoroTimer />} />
+          <Route path="/auth" element={<AuthPage />} />
+
+          <Route element={<ProtectedRoutes />}>
+            <Route path="/pomodoro" element={<PomodoroPage />} />
+          </Route>
         </Routes>
       </Container>
     </BrowserRouter>
@@ -23,5 +32,6 @@ const Container = styled.div`
 width: 100vw;
 min-height: 100vh;
 margin: 0 !important;
+
 
 `

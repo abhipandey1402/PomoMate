@@ -1,5 +1,4 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 
 interface SessionInfoProps {
     workTime: number;
@@ -10,15 +9,15 @@ interface SessionInfoProps {
 
 const SessionInfo: React.FC<SessionInfoProps> = ({ workTime, breakTime, sessionType, onCustomize }) => (
     <div className="flex space-x-6 mb-6">
-        <div className={`p-4 text-2xl rounded ${sessionType === 'work' ? 'bg-black text-white' : 'bg-gray-100'}`}>
-            Work: {workTime} min
+        <div className={`p-4 text-3xl rounded ${sessionType === 'work' ? 'bg-black text-white' : 'bg-gray-200 text-black'}`}>
+            Focus: {workTime} min
         </div>
-        <div className={`p-4 text-2xl rounded ${sessionType === 'break' ? 'bg-black text-white' : 'bg-gray-100'}`}>
+        <div className={`p-4 text-3xl rounded ${sessionType === 'break' ? 'bg-black text-white' : 'bg-gray-200 text-black'}`}>
             Break: {breakTime} min
         </div>
-        <Button variant="secondary" className="px-4 py-8 text-lg" onClick={onCustomize}>
+        <div className="p-4 bg-gray-200 text-black text-3xl rounded cursor-pointer" onClick={onCustomize}>
             Customize
-        </Button>
+        </div>
     </div>
 );
 

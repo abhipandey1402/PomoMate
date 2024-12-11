@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import TimerDisplay from '../components/TimerDisplay';
 import SessionInfo from '../components/SessionInfo';
 import TimerControls from '../components/TimerControls';
@@ -27,12 +27,8 @@ const PomodoroPage: React.FC = () => {
 
     return (
         <Container>
-            <Card className="w-2/6 h-2/4 max-w-full mx-auto px-10 py-10 flex-col items-center justify-items-center">
-                <CardHeader className='mb-6'>
-                    <CardTitle className="text-center text-3xl">Pomodoro Timer</CardTitle>
-                </CardHeader>
+            <Card className="bg-gradient-to-br from-black via-gray-900 to-black text-white  w-2/6 h-2/4 max-w-full mx-auto px-10 py-10 flex-col items-center justify-items-center">
                 <CardContent className="flex-col justify-items-center items-center">
-                    <TimerDisplay timeLeft={timeLeft} sessionType={sessionType} formatTime={formatTime} />
                     <audio ref={audioRef} src="/api/placeholder/bell.mp3" />
 
                     {!isCustomizing ? (
@@ -43,6 +39,7 @@ const PomodoroPage: React.FC = () => {
                                 sessionType={sessionType}
                                 onCustomize={() => setIsCustomizing(true)}
                             />
+                            <TimerDisplay timeLeft={timeLeft} formatTime={formatTime} />
                             <TimerControls
                                 isRunning={isRunning}
                                 onStart={() => setIsRunning(true)}
