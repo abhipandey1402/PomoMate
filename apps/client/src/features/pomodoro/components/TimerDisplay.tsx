@@ -2,14 +2,13 @@ import React from 'react';
 
 interface TimerDisplayProps {
     timeLeft: number;
-    sessionType: string;
     formatTime: (seconds: number) => string;
 }
 
-const TimerDisplay: React.FC<TimerDisplayProps> = ({ timeLeft, sessionType, formatTime }) => {
+const TimerDisplay: React.FC<TimerDisplayProps> = ({ timeLeft, formatTime }) => {
     return (
-        <div className="text-6xl font-bold mb-4">
-            {formatTime(timeLeft)} {sessionType === 'work' ? '- Work Mode' : '- Break Mode'}
+        <div className="text-9xl font-bold mb-20 mt-20">
+            {formatTime(timeLeft)}
         </div>
     );
 };
