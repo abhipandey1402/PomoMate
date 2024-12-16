@@ -7,11 +7,12 @@ import AuthPage from "./features/user/pages/AuthPage";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoutes from "./features/globalFeatures/components/ProtectedRoutes";
+import Dashboard from "./features/dashboard/pages/Dashboard";
 
 function App() {
   return (
     <BrowserRouter>
-      <Container className="bg-gradient-to-br from-black via-gray-900 to-black">
+      <Container className="bg-gray-100 overflow-x-hidden">
         <ToastContainer />
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -19,6 +20,7 @@ function App() {
 
           <Route element={<ProtectedRoutes />}>
             <Route path="/pomodoro" element={<PomodoroPage />} />
+            <Route path="/dashboard" element={<Dashboard/>} />
           </Route>
         </Routes>
       </Container>
