@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import prisma from './db/prismaClient.js';
 import { globalErrorHandler } from './utils/GlobalErrorHandler.js';
+import { initializeCronJobs } from './crons/index.js';
 
 
 // Load environment variables
@@ -46,6 +47,11 @@ app.use(cookieParser());
 (async () => {
     try {
         await prisma.$connect();
+        console.log("Connected to the database.")
+
+        // Initialize cron jobs
+        initializeCronJobs();
+
         const port = process.env.PORT || 8000;
         app.listen(port, () => {
             console.log(`Server is running at port: ${port}`);
@@ -62,6 +68,7 @@ import userRouter from "./routes/user.routes.js"
 import timerRouter from './routes/timer.routes.js';
 import taskRouter from './routes/task.routes.js';
 import configRouter from './routes/config.routes.js';
+
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/timer", timerRouter);
