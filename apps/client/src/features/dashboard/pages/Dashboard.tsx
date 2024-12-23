@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useEffect } from "react";
 import { setCurrentItem } from "@/features/globalFeatures/slices/configSlice";
+import ChatPage from "@/features/chat/pages/ChatPage";
 
 const Dashboard = () => {
     const currentItem = useSelector((state: RootState) => state.config?.currentItem);
@@ -33,7 +34,7 @@ const Dashboard = () => {
             case "community":
                 return <span>Community</span>
             case "chats":
-                return <span>Chats</span>
+                return <ChatPage/>
             case "breakPlay":
                 return <span>Break & Play</span>
             case "achievements":
@@ -50,7 +51,7 @@ const Dashboard = () => {
     return (
         <div className="w-full bg-gray-100 flex box-border">
             <Sidebar />
-            <div style={{ maxHeight: 'calc(20rem)' }} className="ml-96">
+            <div style={{ maxHeight: 'calc(20rem)', width: 'calc(100vw - 24rem)' }} className="ml-96">
                 {renderCurrentContent()}
             </div>
         </div>
