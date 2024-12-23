@@ -2,10 +2,18 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import prisma from './db/prismaClient.js';
 import { globalErrorHandler } from './utils/GlobalErrorHandler.js';
 import { initializeCronJobs } from './crons/index.js';
+import { setupChatSocket } from './sockets/chat.socket.js';
 
+import userRouter from './routes/user.routes.js';
+import timerRouter from './routes/timer.routes.js';
+import taskRouter from './routes/task.routes.js';
+import configRouter from './routes/config.routes.js';
+import chatRouter from './routes/chat.routes.js';
 
 // Load environment variables
 dotenv.config({
@@ -13,68 +21,76 @@ dotenv.config({
 });
 
 const app: Application = express();
+const httpServer = createServer(app);
+
 
 // Middleware
-app.use(
-    cors({
-        origin: [
-            'http://localhost:3000',
-            'http://localhost:3001',
-            'http://localhost:5173',
-        ],
-        methods: ['POST', 'GET', 'PUT', 'PATCH', 'DELETE'],
-        credentials: true,
-    }),
-);
 
-app.use(
-    express.json({
-        limit: '32kb',
-    }),
-);
+const configureMiddleware = () => {
+    app.use(
+        cors({
+            origin: [
+                'http://localhost:3000',
+                'http://localhost:3001',
+                'http://localhost:5173',
+            ],
+            methods: ['POST', 'GET', 'PUT', 'PATCH', 'DELETE'],
+            credentials: true,
+        }),
+    );
 
-app.use(
-    express.urlencoded({
-        extended: true,
-        limit: '32kb',
-    }),
-);
+    app.use(express.json({ limit: '32kb' }));
+    app.use(express.urlencoded({ extended: true, limit: '32kb' }));
+    app.use(express.static('public'));
+    app.use(cookieParser());
+}
 
-app.use(express.static('public'));
-app.use(cookieParser());
+// Setup routes for API endpoints
+const setupRoutes = () => {
+    app.use("/api/v1/users", userRouter);
+    app.use("/api/v1/timer", timerRouter);
+    app.use("/api/v1/task", taskRouter);
+    app.use("/api/v1/config", configRouter);
+    app.use("/api/v1/chat", chatRouter);
+};
 
-// Connect to database and start the server
-(async () => {
+const configureSocket = () => {
+    const io = new Server(httpServer, {
+        cors: {
+            origin: ['http://localhost:3000', 'http://localhost:3001'],
+            methods: ['GET', 'POST'],
+        },
+    });
+    setupChatSocket(io);
+}
+
+const startServer = async () => {
     try {
         await prisma.$connect();
-        console.log("Connected to the database.")
+        console.log("Connected to the database.");
 
         // Initialize cron jobs
         initializeCronJobs();
 
         const port = process.env.PORT || 8000;
-        app.listen(port, () => {
+        httpServer.listen(port, () => {
             console.log(`Server is running at port: ${port}`);
         });
     } catch (err) {
-        console.error('PostgreSQL connection failed!', err);
+        console.error('Database connection failed!', err);
+        process.exit(1); // Gracefully exit if DB connection fails
     }
-})();
-
-// Swagger documentation
+}
 
 
-import userRouter from "./routes/user.routes.js"
-import timerRouter from './routes/timer.routes.js';
-import taskRouter from './routes/task.routes.js';
-import configRouter from './routes/config.routes.js';
+const initializeApp = () => {
+    configureMiddleware();
+    setupRoutes();
+    configureSocket();
+    app.use(globalErrorHandler);
+}
 
-
-app.use("/api/v1/users", userRouter);
-app.use("/api/v1/timer", timerRouter);
-app.use("/api/v1/task", taskRouter);
-app.use("/api/v1/config", configRouter);
-
-app.use(globalErrorHandler);
+initializeApp();
+startServer();
 
 export { app };
