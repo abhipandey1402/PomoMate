@@ -7,13 +7,11 @@ import { Server } from 'socket.io';
 import prisma from './db/prismaClient.js';
 import { globalErrorHandler } from './utils/GlobalErrorHandler.js';
 import { initializeCronJobs } from './crons/index.js';
-import { setupChatSocket } from './sockets/chat.socket.js';
 
 import userRouter from './routes/user.routes.js';
 import timerRouter from './routes/timer.routes.js';
 import taskRouter from './routes/task.routes.js';
 import configRouter from './routes/config.routes.js';
-import chatRouter from './routes/chat.routes.js';
 
 // Load environment variables
 dotenv.config({
@@ -51,18 +49,7 @@ const setupRoutes = () => {
     app.use("/api/v1/timer", timerRouter);
     app.use("/api/v1/task", taskRouter);
     app.use("/api/v1/config", configRouter);
-    app.use("/api/v1/chat", chatRouter);
 };
-
-const configureSocket = () => {
-    const io = new Server(httpServer, {
-        cors: {
-            origin: ['http://localhost:3000', 'http://localhost:3001'],
-            methods: ['GET', 'POST'],
-        },
-    });
-    setupChatSocket(io);
-}
 
 const startServer = async () => {
     try {
@@ -86,7 +73,6 @@ const startServer = async () => {
 const initializeApp = () => {
     configureMiddleware();
     setupRoutes();
-    configureSocket();
     app.use(globalErrorHandler);
 }
 
