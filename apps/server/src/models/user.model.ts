@@ -11,17 +11,16 @@ const UserSchema = new Schema(
         preferences: { type: mongoose.Schema.Types.Mixed },
         completedSessions: { type: Number, default: 0 },
         refreshToken: { type: String },
-        createdAt: { type: Date, default: Date.now },
-        updatedAt: { type: Date, default: Date.now },
+
+        // RelationShips
         sessionsOwned: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Session' }],
         sessionsJoined: [{ type: mongoose.Schema.Types.ObjectId, ref: 'SessionFollower' }],
         tasksOwned: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
         sharedTasks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'TaskShare' }],
         teamsOwned: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team' }],
         teamsJoined: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team' }],
-        messagesSent: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Message' }],
-        messagesReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Message' }],
-        channels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'UserChannel' }],
+        messagesSent: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage' }],
+        messagesReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage' }],
         timers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Timer' }],
         notifications: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notification' }],
         UserConfig: { type: mongoose.Schema.Types.ObjectId, ref: 'UserConfig' }
