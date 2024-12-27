@@ -29,6 +29,20 @@ class ApiError extends Error {
             Error.captureStackTrace(this, this.constructor);
         }
     }
+
+    // Method to format the error as a response object
+    toResponse() {
+        return {
+            success: this.success,
+            message: this.message,
+            errors: this.errors,
+            data: this.data,
+        };
+    }
+
+    logError() {
+        logger.error(`StatusCode: ${this.statusCode}, Message: ${this.message}, Errors: ${this.errors}`);
+    }
 }
 
 export { ApiError };

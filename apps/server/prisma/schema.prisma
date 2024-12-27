@@ -68,10 +68,27 @@ model Task {
   isPublic    Boolean     @default(false) // Private by default
   teamId      String? // Optional: Team this task is shared with
   team        Team?       @relation(fields: [teamId], references: [id])
-  sharedWith  TaskShare[]
+  sharedWith  TaskShare[] // Shared task with people
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Time tracking fields
+  totalTimeRequired Int? // Total time required to complete the task in minutes (e.g., 120 for 2 hours)
+  timeWorked        Int  @default(0) // Total time worked on this task in minutes
+  timeWorkedToday   Int  @default(0) // Time worked on this task today in minutes
+  remainingTime     Int  @default(0) // Remaining time to work on the task (calculated from totalTimeRequired - timeWorked)
+
+  // Task status and completion
+  isTaskStarred   Boolean   @default(false) // If the task is starred
+  dueDate         DateTime? // Due date and time for the task
+  isBeingWorkedOn Boolean   @default(false) // Whether the task is currently being worked on
+
+  // Relationships
+  sharedWithUserIds String[] // List of user IDs with whom the task is shared (instead of TaskShare for simplicity)
+
+  // Automatic fields for task tracking
+  timerStartTime DateTime? // Timestamp when the timer started
+  timerEndTime   DateTime? // Timestamp when the timer ended
 }
 
 model TaskShare {

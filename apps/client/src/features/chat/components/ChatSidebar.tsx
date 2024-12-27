@@ -1,4 +1,3 @@
-import React from 'react'
 import { FaChevronDown, FaSearch, FaThList, FaUserCircle } from 'react-icons/fa'
 
 export interface User {
