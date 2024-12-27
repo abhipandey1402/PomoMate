@@ -3,8 +3,6 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
-import { Server } from 'socket.io';
-import prisma from './db/prismaClient.js';
 import { globalErrorHandler } from './utils/GlobalErrorHandler.js';
 import { initializeCronJobs } from './crons/index.js';
 
@@ -12,6 +10,7 @@ import userRouter from './routes/user.routes.js';
 import timerRouter from './routes/timer.routes.js';
 import taskRouter from './routes/task.routes.js';
 import configRouter from './routes/config.routes.js';
+import connectDB from './db/index.js';
 
 // Load environment variables
 dotenv.config({
@@ -53,7 +52,7 @@ const setupRoutes = () => {
 
 const startServer = async () => {
     try {
-        await prisma.$connect();
+        connectDB();
         console.log("Connected to the database.");
 
         // Initialize cron jobs

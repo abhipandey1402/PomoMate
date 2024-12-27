@@ -1,11 +1,8 @@
-import { PrismaClient } from "@prisma/client";
-import { ApiError } from "../utils/ApiError.js";
-import { asyncHandler } from "../utils/AsyncHandler.js";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-
-// Initialize Prisma Client
-const prisma = new PrismaClient();
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/AsyncHandler.js";
+import { User } from "../models/user.model.js"; // Import Mongoose User model
 
 // Define the extended Request type to include 'user' property
 interface CustomRequest extends Request {
@@ -24,11 +21,8 @@ export const verifyJWT = asyncHandler(async (req: CustomRequest, res: Response, 
         // Decode and verify the token
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as JwtPayload;
 
-        // Find the user by decoded ID
-        const user = await prisma.user.findUnique({
-            where: { id: decodedToken?.id }, // Assumes token contains the user's `id`
-            select: { id: true, email: true, username: true }, // Exclude sensitive fields like password
-        });
+        // Find the user by decoded ID using Mongoose
+        const user = await User.findById(decodedToken?.id).select("id email username"); // Exclude sensitive fields like password
 
         if (!user) {
             throw new ApiError(401, "Invalid Access Token");

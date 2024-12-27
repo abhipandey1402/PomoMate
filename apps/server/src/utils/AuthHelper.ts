@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import jwt, { SignOptions } from "jsonwebtoken";
 
 /**
  * Hashes a password before saving to the database.
@@ -28,10 +28,16 @@ export const isPasswordCorrect = async (
  * @param payload - The payload to include in the token (e.g., user details).
  * @returns {string} - The generated access token.
  */
-export const generateAccessToken = (payload: object): string => {
-    return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET as string, {
-        expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-    });
+export const generateAccessToken = (userId: string): string => {
+    if (!userId) {
+        throw new Error("User ID is required to generate an access token");
+    }
+
+    // Create payload as a plain object
+    const payload = { id: userId };
+
+    const options: SignOptions = { expiresIn: "1h" };
+    return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET as string, options);
 };
 
 /**
@@ -39,8 +45,14 @@ export const generateAccessToken = (payload: object): string => {
  * @param payload - The payload to include in the token (e.g., user ID).
  * @returns {string} - The generated refresh token.
  */
-export const generateRefreshToken = (payload: object): string => {
-    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET as string, {
-        expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-    });
+export const generateRefreshToken = (userId: string): string => {
+    if (!userId) {
+        throw new Error("User ID is required to generate a refresh token");
+    }
+
+    // Create payload as a plain object
+    const payload = { id: userId };
+
+    const options: SignOptions = { expiresIn: "7d" };
+    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET as string, options);
 };

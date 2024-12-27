@@ -1,147 +1,125 @@
-import { TaskStatus } from "@prisma/client";
-import prisma from "../db/prismaClient.js"
+import { Task } from "../models/task.model.js";
+import { TaskShare } from "../models/taskShare.model.js";
 import { ApiError } from "../utils/ApiError.js";
 
 export const addTask = async (title: string, description: string, userId: string, totalTimeRequired: number, dueDate: Date) => {
-    const task = await prisma.task.create({
-        data: {
-            title,
-            description,
-            status: "notStarted",
-            ownerId: userId,
-            totalTimeRequired,
-            dueDate,
-            timeWorked: 0,
-            timeWorkedToday: 0,
-            remainingTime: totalTimeRequired,
-            isTaskStarred: false,
-            isBeingWorkedOn: false,
-        }
+    const task = new Task({
+        title,
+        description,
+        status: "notStarted",
+        ownerId: userId,
+        totalTimeRequired,
+        dueDate,
+        timeWorked: 0,
+        timeWorkedToday: 0,
+        remainingTime: totalTimeRequired,
+        isTaskStarred: false,
+        isBeingWorkedOn: false,
     });
+
+    await task.save();
     return task;
 };
 
 export const getTask = async (taskId: string, userId: string) => {
-    const task = await prisma.task.findUnique({
-        where: { id: taskId, ownerId: userId },
+    const task = await Task.findOne({
+        _id: taskId,
+        ownerId: userId,
     });
 
     if (!task) {
-        throw new ApiError(400, "Task not found with given task Id")
-    };
+        throw new ApiError(400, "Task not found with given task Id");
+    }
 
     return task;
 };
 
 export const getTasks = async (userId: string) => {
-    const tasks = await prisma.task.findMany({
-        where: { ownerId: userId },
+    const tasks = await Task.find({
+        ownerId: userId
     });
 
-    if (!tasks) {
-        throw new ApiError(400, "Tasks not found for current user ")
-    };
+    if (!tasks || tasks.length === 0) {
+        throw new ApiError(400, "Tasks not found for current user");
+    }
 
     return tasks;
 };
 
-export const getTasksByStatus = async (status: TaskStatus, userId: string) => {
-    const tasks = await prisma.task.findMany({
-        where: { ownerId: userId, status: status },
+export const getTasksByStatus = async (status: string, userId: string) => {
+    const tasks = await Task.find({
+        ownerId: userId,
+        status: status
     });
 
-    if (!tasks) {
-        throw new ApiError(400, "Tasks not found for current user with provided status")
-    };
+    if (!tasks || tasks.length === 0) {
+        throw new ApiError(400, "Tasks not found for current user with provided status");
+    }
 
     return tasks;
 };
-
 
 export const getCurrentTask = async (userId: string) => {
-    const currentTask = await prisma.task.findFirst({
-        where: { ownerId: userId, isBeingWorkedOn: true },
-        select: {
-            id: true,
-            title: true,
-            description: true,
-            timerStartTime: true,
-            timeWorked: true,
-            timeWorkedToday: true,
-            remainingTime: true,
-            totalTimeRequired: true,
-        },
-    });
+    const currentTask = await Task.findOne({
+        ownerId: userId,
+        isBeingWorkedOn: true
+    }).select("id title description timerStartTime timeWorked timeWorkedToday remainingTime totalTimeRequired");
 
     if (!currentTask) {
-        throw new ApiError(400, "Tasks not found for current user with provided status")
-    };
+        throw new ApiError(400, "Tasks not found for current user with provided status");
+    }
 
     return currentTask;
 };
 
-
-export const updateTaskStatus = async (taskId: string, status: TaskStatus, userId: string) => {
-    const task = await prisma.task.findUnique({
-        where: { id: taskId, ownerId: userId },
-        select: {
-            id: true,
-            status: true
-        }
+export const updateTaskStatus = async (taskId: string, status: string, userId: string) => {
+    const task = await Task.findOne({
+        _id: taskId,
+        ownerId: userId
     });
 
     if (!task || task.status === status) {
-        throw new ApiError(400, "Task not found, or task is already in provided status")
+        throw new ApiError(400, "Task not found, or task is already in provided status");
     }
 
-    const updatedStatus = await prisma.task.update({
-        where: { id: taskId, ownerId: userId },
-        data: {
-            status: status,
-        }
-    });
-    return updatedStatus;
+    task.status = status;
+    await task.save();
+    return task;
 };
 
 export const deleteTask = async (taskId: string, userId: string) => {
-    const task = await prisma.task.findUnique({
-        where: { id: taskId, ownerId: userId },
-        select: {
-            id: true,
-            status: true
-        }
+    const task = await Task.findOne({
+        _id: taskId,
+        ownerId: userId
     });
 
     if (!task) {
         throw new ApiError(400, "Task not found with given taskId");
     }
 
-    const deletedTask = await prisma.task.delete({
-        where: { id: taskId, ownerId: userId }
-    });
-    return deletedTask;
+    await task.deleteOne();
+    return task;
 };
 
 export const toggleTaskStarred = async (taskId: string, userId: string) => {
-    const task = await prisma.task.findUnique({
-        where: { id: taskId, ownerId: userId },
+    const task = await Task.findOne({
+        _id: taskId,
+        ownerId: userId
     });
 
     if (!task) {
         throw new ApiError(400, "Task not found with given taskId");
     }
 
-    const updatedTask = await prisma.task.update({
-        where: { id: taskId, ownerId: userId },
-        data: { isTaskStarred: !task.isTaskStarred },
-    });
-
-    return updatedTask;
+    task.isTaskStarred = !task.isTaskStarred;
+    await task.save();
+    return task;
 };
 
 export const manageTaskTimer = async (taskId: string, userId: string, action: "start" | "stop") => {
-    const task = await prisma.task.findUnique({
-        where: { id: taskId, ownerId: userId },
+    const task = await Task.findOne({
+        _id: taskId,
+        ownerId: userId,
     });
 
     if (!task) {
@@ -149,30 +127,24 @@ export const manageTaskTimer = async (taskId: string, userId: string, action: "s
     }
 
     if (action === "start") {
-        // Ensure no other task is being worked on
-        const ongoingTask = await prisma.task.findFirst({
-            where: { ownerId: userId, isBeingWorkedOn: true },
+        const ongoingTask = await Task.findOne({
+            ownerId: userId,
+            isBeingWorkedOn: true,
         });
 
         if (ongoingTask) {
             throw new ApiError(400, "Another task is currently being worked on");
         }
 
-        // Calculate the remaining time and check if it's exceeded
-        if (task.remainingTime !== null && task.remainingTime <= 0) {
+        if (task.remainingTime <= 0) {
             throw new ApiError(400, "No remaining time left for this task");
         }
 
-        // Start timer
-        const updatedTask = await prisma.task.update({
-            where: { id: taskId, ownerId: userId },
-            data: {
-                isBeingWorkedOn: true,
-                timerStartTime: new Date(),
-            },
-        });
+        task.isBeingWorkedOn = true;
+        task.timerStartTime = new Date();
+        await task.save();
 
-        return updatedTask;
+        return task;
     } else if (action === "stop") {
         if (!task.isBeingWorkedOn) {
             throw new ApiError(400, "Task is not currently being worked on");
@@ -180,28 +152,23 @@ export const manageTaskTimer = async (taskId: string, userId: string, action: "s
 
         const now = new Date();
 
-        // Calculate time worked since the timer started in seconds
-        const timeWorkedInSeconds = Math.floor((now.getTime() - new Date(task.timerStartTime!).getTime()) / 1000);
+        // Ensure task.timerStartTime is defined before calculating time difference
+        if (!task.timerStartTime) {
+            throw new ApiError(400, "Task timer start time is not set");
+        }
 
-        // Update timeWorkedToday and remainingTime in seconds
+        const timeWorkedInSeconds = Math.floor((now.getTime() - new Date(task.timerStartTime).getTime()) / 1000);
         const newTimeWorkedToday = (task.timeWorkedToday || 0) + timeWorkedInSeconds;
-        const newRemainingTime = task.remainingTime !== null
-            ? Math.max(0, task.remainingTime - timeWorkedInSeconds)
-            : 0;
+        const newRemainingTime = task.remainingTime > 0 ? Math.max(0, task.remainingTime - timeWorkedInSeconds) : 0;
 
-        // Stop the timer and update the time worked
-        const updatedTask = await prisma.task.update({
-            where: { id: taskId, ownerId: userId },
-            data: {
-                isBeingWorkedOn: false,
-                timerEndTime: now,
-                timeWorked: { increment: timeWorkedInSeconds },
-                timeWorkedToday: newTimeWorkedToday,
-                remainingTime: newRemainingTime,
-            },
-        });
+        task.isBeingWorkedOn = false;
+        task.timerEndTime = now;
+        task.timeWorked += timeWorkedInSeconds;
+        task.timeWorkedToday = newTimeWorkedToday;
+        task.remainingTime = newRemainingTime;
 
-        return updatedTask;
+        await task.save();
+        return task;
     }
 
     throw new ApiError(400, "Invalid action");
@@ -209,34 +176,23 @@ export const manageTaskTimer = async (taskId: string, userId: string, action: "s
 
 
 export const shareTaskWithUsers = async (taskId: string, userId: string, userIds: string[]) => {
-    const task = await prisma.task.findUnique({
-        where: { id: taskId, ownerId: userId },
+    const task = await Task.findOne({
+        _id: taskId,
+        ownerId: userId
     });
 
     if (!task) {
         throw new ApiError(400, "Task not found with given taskId");
     }
 
-    // Assuming a separate TaskShare model exists to link tasks with users
-    const taskShares = userIds.map(userId => ({
-        taskId,
-        userId
-    }));
+    // Assuming a TaskShare model exists
+    const taskShares = userIds.map(userId => ({ taskId, userId }));
+    await TaskShare.create(taskShares);  // Assuming TaskShare model exists
 
-    // Create TaskShare entries for each user
-    await prisma.taskShare.createMany({
-        data: taskShares
-    });
+    const sharedUsers = await TaskShare.find({
+        taskId: taskId
+    }).populate("user");
 
-    // Fetch all users who have access to the task (including the owner)
-    const sharedUsers = await prisma.taskShare.findMany({
-        where: { taskId: taskId },
-        include: {
-            user: true,  // Include user details in the result
-        }
-    });
-
-    // Return task with the list of shared users
     return {
         task,
         sharedUsers

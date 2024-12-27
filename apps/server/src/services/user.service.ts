@@ -1,4 +1,4 @@
-import prisma from "../db/prismaClient.js";
+import { User } from "../models/user.model.js";  // Importing the Mongoose User model
 import { ApiError } from "../utils/ApiError.js";
 import { hashPassword, isPasswordCorrect, generateAccessToken, generateRefreshToken } from "../utils/AuthHelper.js";
 
@@ -18,74 +18,71 @@ interface LoginUserInput {
 export const registerUser = async (data: RegisterUserInput) => {
     const { fullName, email, username, password } = data;
 
-    const existedUser = await prisma.user.findFirst({
-        where: { OR: [{ email }, { username }] },
-    });
-
+    // Check if the user with the same email or username already exists
+    const existedUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existedUser) {
         throw new ApiError(409, "User with email or username already exists");
     }
 
+    // Hash the password
     const hashedPassword = await hashPassword(password);
 
-    const user = await prisma.user.create({
-        data: {
-            fullName,
-            email,
-            username: username.toLowerCase(),
-            password: hashedPassword,
-        },
+    // Create a new user
+    const user = new User({
+        fullName,
+        email,
+        username: username.toLowerCase(),
+        password: hashedPassword,
     });
+    await user.save();
 
-    const accessToken = generateAccessToken({ id: user.id });
+    // Generate JWT tokens
+    const accessToken = generateAccessToken(user._id.toString());
+    const refreshToken = generateRefreshToken(user._id.toString());
 
-    return { user: { ...user, password: undefined, refreshToken: undefined }, accessToken };
+    return { user: { ...user.toObject(), password: undefined, refreshToken: undefined }, accessToken, refreshToken };
 };
 
 export const loginUser = async (data: LoginUserInput) => {
     const { email, username, password } = data;
 
-    const user = await prisma.user.findFirst({
-        where: { OR: [{ email }, { username }] },
-    });
-
+    // Find the user by email or username
+    const user = await User.findOne({ $or: [{ email }, { username }] });
     if (!user) {
         throw new ApiError(404, "User does not exist");
     }
 
+    // Check if the password is correct
     const isPasswordValid = await isPasswordCorrect(password, user.password);
     if (!isPasswordValid) {
         throw new ApiError(401, "Invalid user credentials");
     }
 
-    const accessToken = generateAccessToken({ id: user.id });
-    const refreshToken = generateRefreshToken({ id: user.id });
+    // Generate JWT tokens
+    const accessToken = generateAccessToken(user._id.toString());
+    const refreshToken = generateRefreshToken(user._id.toString());
 
-    await prisma.user.update({
-        where: { id: user.id },
-        data: { refreshToken },
-    });
+    // Update user's refresh token in the database
+    user.refreshToken = refreshToken;
+    await user.save();
 
     return {
-        user: { ...user, password: undefined, refreshToken: undefined },
+        user: { ...user.toObject(), password: undefined, refreshToken: undefined },
         accessToken,
         refreshToken,
     };
 };
 
 export const logoutUser = async (userId: string): Promise<void> => {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-    });
-
+    // Find the user by ID
+    const user = await User.findById(userId);
     if (!user) {
         throw new ApiError(404, "User not found");
     }
 
-    await prisma.user.update({
-        where: { id: userId },
-        data: { refreshToken: null },
-    });
+    // Remove the refresh token from the user
+    user.refreshToken = null;
+    await user.save();
 };
 
 export const refreshAccessToken = async (incomingRefreshToken: string) => {
@@ -93,63 +90,47 @@ export const refreshAccessToken = async (incomingRefreshToken: string) => {
         throw new ApiError(401, "Refresh token is required");
     }
 
-    const user = await prisma.user.findFirst({
-        where: { refreshToken: incomingRefreshToken },
-    });
-
+    // Find the user with the refresh token
+    const user = await User.findOne({ refreshToken: incomingRefreshToken });
     if (!user) {
         throw new ApiError(403, "Invalid refresh token");
     }
 
-    const newAccessToken = generateAccessToken({ id: user.id });
-    const newRefreshToken = generateRefreshToken({ id: user.id });
+    // Generate new access and refresh tokens
+    const newAccessToken = generateAccessToken(user._id.toString());
+    const newRefreshToken = generateRefreshToken(user._id.toString());
 
-    await prisma.user.update({
-        where: { id: user.id },
-        data: { refreshToken: newRefreshToken },
-    });
+    // Update user's refresh token in the database
+    user.refreshToken = newRefreshToken;
+    await user.save();
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 };
 
 export const changePassword = async (userId: string, oldPassword: string, newPassword: string): Promise<void> => {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-    });
-
+    // Find the user by ID
+    const user = await User.findById(userId);
     if (!user) {
         throw new ApiError(404, "User not found");
     }
 
+    // Check if the old password is correct
     const isOldPasswordValid = await isPasswordCorrect(oldPassword, user.password);
     if (!isOldPasswordValid) {
         throw new ApiError(401, "Old password is incorrect");
     }
 
+    // Hash the new password
     const hashedNewPassword = await hashPassword(newPassword);
 
-    await prisma.user.update({
-        where: { id: userId },
-        data: { password: hashedNewPassword },
-    });
+    // Update the user's password
+    user.password = hashedNewPassword;
+    await user.save();
 };
 
 export const getCurrentUser = async (userId: string) => {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-            id: true,
-            fullName: true,
-            email: true,
-            username: true,
-            role: true,
-            avatarUrl: true,
-            preferences: true,
-            completedSessions: true,
-            createdAt: true,
-        },
-    });
-
+    // Find the user by ID
+    const user = await User.findById(userId).select("-password");  // Don't return the password
     if (!user) {
         throw new ApiError(404, "User not found");
     }

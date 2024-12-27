@@ -1,4 +1,4 @@
-import prisma from "../db/prismaClient.js";
+import { Timer } from "../models/timer.model.js";  // Assuming you've created a Timer model with Mongoose
 import { ApiError } from "../utils/ApiError.js";
 
 interface StartTimerInput {
@@ -10,31 +10,23 @@ interface StartTimerInput {
 export const startTimer = async (data: StartTimerInput) => {
     const { duration, breakTime, userId } = data;
 
-    const timer = await prisma.timer.create({
-        data: {
-            userId,
-            duration,
-            breakTime,
-            remainingTime: duration
-        }
-    })
+    const timer = new Timer({
+        userId,
+        duration,
+        breakTime,
+        remainingTime: duration,
+        status: "active", // Default status when a timer starts
+        completed: false,
+    });
+
+    await timer.save();  // Save the timer document
     return timer;
 };
 
 export const getTimer = async (timerId: string, userId: string) => {
-    const timer = await prisma.timer.findUnique({
-        where: { id: timerId, userId: userId },
-        select: {
-            id: true,
-            user: true,
-            userId: true,
-            duration: true,
-            breakTime: true,
-            remainingTime: true,
-            status: true,
-            completed: true,
-            createdAt: true,
-        }
+    const timer = await Timer.findOne({
+        _id: timerId,
+        userId: userId,
     });
 
     if (!timer) {
@@ -45,79 +37,67 @@ export const getTimer = async (timerId: string, userId: string) => {
 };
 
 export const pauseTimer = async (timerId: string, remainingTime: number, userId: string) => {
-    const timer = await prisma.timer.findUnique({
-        where: { id: timerId, userId: userId },
-        select: { id: true, status: true, remainingTime: true, createdAt: true, duration: true },
+    const timer = await Timer.findOne({
+        _id: timerId,
+        userId: userId,
     });
 
     if (!timer || timer.status !== "active") {
         throw new ApiError(400, "Timer not found or not active");
     }
 
-    const updatedTimer = await prisma.timer.update({
-        where: { id: timerId, userId: userId },
-        data: {
-            status: "paused",
-            remainingTime: remainingTime,
-        }
-    });
-    return updatedTimer;
+    timer.status = "paused";
+    timer.remainingTime = remainingTime;
+    await timer.save();  // Save the changes
+
+    return timer;
 };
 
 export const resumeTimer = async (timerId: string, userId: string) => {
-    const timer = await prisma.timer.findUnique({
-        where: { id: timerId, userId: userId },
-        select: { id: true, status: true }
-    })
+    const timer = await Timer.findOne({
+        _id: timerId,
+        userId: userId,
+    });
 
-    if (!timer || timer.status != "paused") {
+    if (!timer || timer.status !== "paused") {
         throw new ApiError(400, "Timer not found or not paused");
     }
 
-    const updatedTimer = await prisma.timer.update({
-        where: { id: timerId, userId: userId },
-        data: {
-            status: "active",
-        }
-    });
+    timer.status = "active";
+    await timer.save();  // Save the changes
 
-    return updatedTimer;
+    return timer;
 };
 
 export const completeTimer = async (timerId: string, userId: string) => {
-    const timer = await prisma.timer.findUnique({
-        where: { id: timerId, userId: userId },
-        select: { id: true, status: true }
-    })
+    const timer = await Timer.findOne({
+        _id: timerId,
+        userId: userId,
+    });
 
-    if (!timer || timer.status == "completed") {
+    if (!timer || timer.status === "completed") {
         throw new ApiError(400, "Timer not found or not in the state to be completed");
     }
 
-    const completedTimer = await prisma.timer.update({
-        where: { id: timerId, userId: userId },
-        data: {
-            status: "completed",
-            completed: true,
-            remainingTime: 0,
-        }
-    });
-    return completedTimer;
+    timer.status = "completed";
+    timer.completed = true;
+    timer.remainingTime = 0;
+    await timer.save();  // Save the changes
+
+    return timer;
 };
 
 export const clearTimer = async (timerId: string, userId: string) => {
-    const timer = await prisma.timer.findUnique({
-        where: { id: timerId, userId: userId },
-        select: { id: true, status: true }
+    const timer = await Timer.findOne({
+        _id: timerId,
+        userId: userId,
     });
 
-    if (!timer || timer.status == "completed") {
+    if (!timer || timer.status === "completed") {
         throw new ApiError(400, "Timer not found or it's completed");
     }
 
-    const clearedTimer = await prisma.timer.delete({
-        where: { id: timerId, userId: userId }
-    })
+    await timer.deleteOne();  // Remove the timer from the collection
 
-    return "Timer deleted successfully"
+    return "Timer deleted successfully";
 };
