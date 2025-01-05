@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import logger from "../configs/logger.js";
+import logger from "../logger/winston.logger.js";
 import { ApiError } from "./ApiError.js";
 
 const asyncHandler = (

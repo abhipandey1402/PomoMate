@@ -1,5 +1,4 @@
-import logger from "../configs/logger.js";
-
+import logger from "../logger/winston.logger.js";
 class ApiError extends Error {
     statusCode: number;
     data: any;

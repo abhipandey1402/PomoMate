@@ -1,4 +1,5 @@
 import mongoose, { Mongoose } from "mongoose";
+import logger from "../logger/winston.logger.js";
 
 const DB_NAME = "pomomate";
 
@@ -10,11 +11,11 @@ const connectDB = async (): Promise<void> => {
             `${process.env.MONGODB_URI}/${DB_NAME}`
         );
         dbInstance = connectionInstance;
-        console.info(
+        logger.info(
             `\n☘️  MongoDB Connected! Db host: ${connectionInstance.connection.host}\n`
         );
     } catch (error) {
-        console.error("MongoDB connection error: ", error);
+        logger.error("MongoDB connection error: ", error);
         process.exit(1);
     }
 };

@@ -36,7 +36,7 @@ export const generateAccessToken = (userId: string): string => {
     // Create payload as a plain object
     const payload = { id: userId };
 
-    const options: SignOptions = { expiresIn: "1h" };
+    const options: SignOptions = { expiresIn: process.env.ACCESS_TOKEN_EXPIRY };
     return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET as string, options);
 };
 
@@ -53,6 +53,6 @@ export const generateRefreshToken = (userId: string): string => {
     // Create payload as a plain object
     const payload = { id: userId };
 
-    const options: SignOptions = { expiresIn: "7d" };
+    const options: SignOptions = { expiresIn: process.env.REFRESH_TOKEN_EXPIRY };
     return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET as string, options);
 };

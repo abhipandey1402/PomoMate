@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { ApiError } from "./ApiError.js";
-import logger from "../configs/logger.js";
+import logger from "../logger/winston.logger.js";
 
 const globalErrorHandler = (
     err: any,

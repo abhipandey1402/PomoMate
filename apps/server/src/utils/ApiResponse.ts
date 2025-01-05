@@ -1,4 +1,4 @@
-import logger from "../configs/logger.js";
+import logger from "../logger/winston.logger.js";
 
 class ApiResponse<T> {
     statusCode: number;
